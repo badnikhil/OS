@@ -25,10 +25,7 @@ call update_cursor
 
 mov si , msg_loading
 call print_string
-call newline
-mov si , msg_loading
-call print_string
-jmp $
+
 ;now we need to load the next sector oh my god its fucking complicated 
 mov ah, 0x02        ; BIOS read sectors
 mov al, 4           ; number of sectors to read
@@ -36,8 +33,10 @@ mov dl, 0x80        ; boot drive
 mov ch, 0           ; cylinder
 mov dh, 0           ; head
 mov cl, 2  
+
+
 ; Destination = 0x0000:0x1000 (physical 0x1000)
-mov bx, 1000
+mov bx, 0x1000
 mov es, bx
 xor bx , bx
 int 0x13
@@ -45,7 +44,7 @@ int 0x13
 jc disk_load_fail
 
 
-
+jmp $
 ; whatever needs to be printed should be inside register ->si , it prints till 0 occur 
 print_string:
     push ax
@@ -132,7 +131,7 @@ disk_load_fail:
 disk_read_error_msg db "There is an error in reading the Disk Sector",0
 msg_loading db "Loading Stage 2...", 0
 msg_success db "Stage 2 loaded successfully!", 0
-cursor_pos dw 1
+cursor_pos dw 0
 
 
 times 510 - ($ - $$) db 0
