@@ -70,6 +70,7 @@ PModeMain:
     mov ds, ax
     mov es, ax
     mov ss, ax
+    mov esp , 0x9FC00 ;this is the last safe memory after EBDTA Extended BIOS Data Area.
     mov edi, 0xB8000
     mov ax, 0x0720
     mov [edi], ax
