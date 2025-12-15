@@ -4,8 +4,7 @@
 [org 0x7C00]
 ;this basically means write adresses relative to the given org
 ;as we are the OS and there is no one we can rely on we need to do everything ourselves.. there is no syscall because OS handles syscall
-mov si , msg_bl_loaded
-call print_string
+
 ; print to the VGA .. because we do not have any OS to do it for US . we are the OS
 ;now we need to use the VGA and the memory for VGA is at B8000 , we are in 16 bit real mode so we can only use max 16 bits meaning B800 
 ;put that in es(Extra Segment) and use di as offset ********IT IS FIXED THAT WE USE DI REGISTER AS OFFSET TO ES AND USE AX REGISTER TO GIVE ES A ADdRESS *********
@@ -23,6 +22,8 @@ rep stosw  ;this means move contents of rax into es:di cx times okay
 ;update the cursor position
 mov word [cursor_pos], 0 ;
 call update_cursor
+mov si , msg_bl_loaded
+call print_string
 
 
 ;now we need to load the next sector oh my god its fucking complicated 
