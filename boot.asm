@@ -50,8 +50,15 @@ mov si , msg_for_key_press
 call print_string
 mov ah, 0
 int 16h
+cli            ; disable interrupts
+call EnableA20
+lgdt [gdt_descriptor]    ; load GDT register with start address of Global Descriptor Table
+mov eax ,cr0    ;Enable 32 bit CPU intructions
+or eax , 1
+mov cr0 , eax
 
-jmp 0x1000:0000
+jmp dword 0x08:Load_Kernel    ;Make a far jump with 0x08 so that is <0000000000000100> this makes  now CPU does >>3 and now its 1 so it will load the 1st entry which is code Descriptor
+
 
 ; whatever needs to be printed should be inside register ->si , it prints till 0 occur 
 print_string:
@@ -150,8 +157,54 @@ disk_read_error_msg db "There is an error in reading the Disk Sector",0
 msg_bl_loaded db "Bootloader loaded successfully", 0
 msg_success db "Loaded Disk sectors successfully", 0
 msg_for_key_press db "Press any key on your keyboard to jump to the OS binary",0
+
 cursor_pos dw 10
 
+EnableA20:
+    in al , 0x92
+    or al  , 2
+    out 0x92 , al
+    ret
+
+gdtinfo:
+gdt_start:
+
+gdt_null:  
+    dq 0x0000000000000000 ;Null desciptor
+
+gdt_code:                       ; selector = 0x08 (00-07 bytes are null )
+    dw 0xFFFF                  ; limit low
+    dw 0x0000                  ; base low
+    db 0x00                    ; base middle
+    db 10011010b               ; access byte
+                                ; P=1 DPL=0 S=1 Type=1010 (exec/read)
+    db 11001111b               ; flags + limit high
+                                ; G=1 D=1 L=0 AVL=0
+    db 0x00                    ; base high
+
+gdt_data:                       ; selector = 0x10
+    dw 0xFFFF
+    dw 0x0000
+    db 0x00
+    db 10010010b               ; data read/write
+    db 11001111b
+    db 0x00
+
+gdt_end:
+
+gdt_descriptor:
+    dw gdt_end - gdt_start - 1
+    dd gdt_start
+[bits 32]
+Load_Kernel:
+  mov ax, 0x10      ; data selector
+    ;Load other segments and stabilize the CPU for 32 bit Mode
+    mov ds, ax
+    mov es, ax
+    mov ss, ax
+    mov esp , 0x9FC00 ;this is the last safe memory after EBDTA Extended BIOS Data Area.
+
+    jmp 0x10000
 
 times 510 - ($ - $$) db 0
 dw 0xAA55
