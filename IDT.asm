@@ -92,7 +92,40 @@ load_idt:
 
     mov eax, VE_ISR
     add_interrupt_gate_in_IDT 20
-
+    ;from 21 - 31 are reserved for CPU things
+    ;from 32 - 39 - Master PIC IQRs
+    mov eax, Timer_IRQ_ISR         ;IRQ 0  (Timer)
+    add_interrupt_gate_in_IDT 32
+    mov eax, Keyboard_IRQ_ISR
+    add_interrupt_gate_in_IDT 33    ;IRQ 1 (Keyboard)
+    mov eax, HWI_Master_ISR
+    add_interrupt_gate_in_IDT 34
+    mov eax, HWI_Master_ISR
+    add_interrupt_gate_in_IDT 35
+    mov eax, HWI_Master_ISR
+    add_interrupt_gate_in_IDT 36
+    mov eax, HWI_Master_ISR
+    add_interrupt_gate_in_IDT 37
+    mov eax, HWI_Master_ISR
+    add_interrupt_gate_in_IDT 38
+    mov eax, HWI_Master_ISR
+    add_interrupt_gate_in_IDT 39
+    mov eax , HWI_Slave_ISR
+    add_interrupt_gate_in_IDT 40
+    mov eax , HWI_Slave_ISR
+    add_interrupt_gate_in_IDT 41
+    mov eax , HWI_Slave_ISR
+    add_interrupt_gate_in_IDT 42
+    mov eax , HWI_Slave_ISR
+    add_interrupt_gate_in_IDT 43
+    mov eax , HWI_Slave_ISR
+    add_interrupt_gate_in_IDT 44
+    mov eax , HWI_Slave_ISR
+    add_interrupt_gate_in_IDT 45
+    mov eax , HWI_Slave_ISR
+    add_interrupt_gate_in_IDT 46
+    mov eax , HWI_Slave_ISR
+    add_interrupt_gate_in_IDT 47
     lidt [idt_descriptor]
     ret
 
@@ -211,7 +244,56 @@ VE_ISR:        ; 20 Virtualization Exception
     call print_string
     jmp $
 
+HWI_Master_ISR:            ;32-39 The Master PIC IRQs
+    push esi
+    mov esi , HWI_msg 
+    call print_string
+    mov al, 0x20        ;EOI
+    out 0x20, al
+    pop esi
+    iret
 
+HWI_Slave_ISR:              ;40-47 The Slave PIC IRQs
+    push esi
+    mov esi , HWI_msg
+    call print_string
+
+
+    mov al, 0x20        ;EOI
+    out 0xA0, al        ;Slave
+    out 0x20, al        ;Master
+    pop esi
+
+    iret
+
+;IRQ0 is for timer actually it ticks 18 times per second ..so cant test other interrupts
+Timer_IRQ_ISR:
+    push esi
+    mov al, 0x20        ;EOI
+    out 0x20, al
+    pop esi
+    iret
+
+Keyboard_IRQ_ISR:       ; IRQ1 → vector 33
+    push eax
+    push esi
+
+    in al, 0x60         ;read scancode
+    ; now al have the scancode of which key was pressed
+    ;will add scancode to ascii subroutine soon
+
+    mov esi, KBD_IRQ_msg
+    call print_string
+
+    mov al, 0x20
+    out 0x20, al        ; EOI to master PIC
+
+    pop esi
+    pop eax
+    iret
+Timer_IRQ_msg db "......",10,0
+HWI_msg db "Unhandled IRQ",10,0
+KBD_IRQ_msg db "Keyboard Key clicked",10,0
 DE_msg db "DE ISR called", 0
 DB_msg db "DB ISR called", 0
 NMI_msg db "NMI ISR called", 0
