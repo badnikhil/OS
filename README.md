@@ -17,21 +17,13 @@ To build the OS, you'll need:
 ### Build Commands
 
 ```bash
-# Assemble the bootloader
-nasm -f bin boot.asm -o boot.bin -l boot.lst
-
-# Assemble the second stage
-nasm -f bin stage2.asm -o stage2.bin -l stage2.lst
-
-#write this data to a img file
-cat boot.bin stage2.bin > myos.img
-
+./build
 ```
 
 ## Running in QEMU
 
 ```bash
-qemu-system-x86_64 -drive format=raw,file=os.img
+./run
 ```
 
 ## Debugging
@@ -39,9 +31,5 @@ qemu-system-x86_64 -drive format=raw,file=os.img
 To debug with QEMU and GDB:
 
 ```bash
-# In one terminal
-qemu-system-x86_64 -s -S -drive format=raw,file=os.img
-
-# In another terminal
-gdb -ex "target remote localhost:1234" -ex "set architecture i8086" -ex "layout asm"
+./debug
 ```
